@@ -27,9 +27,9 @@
 
 let code = `
 string a = '1'
-number b = 1 + 1
-b(1, 3)
 `
+// number b = 1 + 1
+// b(1, 3)
  
 /** 词法分析器 */
 function Tokenizer(code) {
@@ -130,25 +130,95 @@ function Tokenizer(code) {
 let t = Tokenizer(code)
 console.log(t)
 
+function addStringVarDeclaration (array) {
+  let child = null
+  let i = 0
+
+  // string变量声明 查找string字符串
+  if (array[i] === 'string') {
+    child = {
+      type: 'StringVariableDeclaration',
+      declarations: [
+        {
+          id: {
+            type: 'Identifier',
+            name: '' // 标识符的名字
+          },
+          init: {}
+        }
+      ]
+    }
+
+    i++
+
+    // 正则匹配string 后面的变量名是否合法 变量名的格式只能为字母
+    if (/^[\w\W]$/ig.test(array[i])) {
+      child.declarations[0].id.name = tokens[current]
+    } else {
+      throw new TypeError('string 变量名不合法')
+    }
+
+    // 如果第三个字符为"="号 则接着往下匹配
+    if (array[i + 1] === '=') {
+      i++
+    } else if (array[i + 1] === '\n') {
+      // 如果为回车 则该声明结束 进行下一条语句
+      array.splice(0, i + 1)
+      return child
+    } else {
+      throw new TypeError(`错误的标识符 ${array[i + 1]}`)
+    }
+
+    // 匹配“=”号后面的变量
+    // 字符串常量
+    if (/^("*+"|'*+')$/ig.test(array[i])) {
+      child.declarations[0].init.value = tokens[current]
+    } else if (/^\d+$/ig.test(array[i])) {
+      throw new TypeError(`无法将数字类型赋值给字符串类型`)
+    }
+
+  }
+
+  return child
+}
+
+function addNumberVarDeclaration () {
+  
+}
+
+function addFunctionDeclaration () {
+  
+}
+
 function parser (tokens) {
   let node = []
   let child = {}
-  tokens.map(item => {
-    if (item === 'string') {
-      child = {
-        type: 'StringVariableDeclaration',
-        declarations: [
-          {
-            id: {
-              type: 'Identifier',
-              name: ''
-            },
-            init: {}
-          }
-        ],
-        kind: 'let'
-      }
+  let current = 0
+  while (tokens.length > 0) {
+    if (tokens[current] === '\n') {
+      current++
+      child = {}
+      continue
     }
-  })
+
+    child = addStringVarDeclaration(tokens)
+    child && node.push()
+  }
+  // tokens.map(item => {
+  //   if (item === 'string') {
+  //     child = {
+  //       type: 'StringVariableDeclaration',
+  //       declarations: [
+  //         {
+  //           id: {
+  //             type: 'Identifier',
+  //             name: '' // 标识符的名字
+  //           },
+  //           init: {}
+  //         }
+  //       ]
+  //     }
+  //   }
+  // })
   // if (tokens)
 }
