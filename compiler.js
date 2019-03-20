@@ -38,8 +38,11 @@
  * }
  */
 
+const fs = require('fs')
+
 let code = `
-string a='1';
+string a='1' + 222 -;
+number b=43;
 `
 // number b = 1 + 1
 // b(1, 3)
@@ -94,7 +97,7 @@ console.log(t)
  * @param {*} type 是否有限定的值类型  如 ：number 则表示值类型需要为number 否则抛出异常
  */
 function addExpress (array, type) {
-
+  console.log('express ', array, 'type', type)
 }
 
 function addVarDeclaration (array) {
@@ -121,21 +124,22 @@ function addVarDeclaration (array) {
     i++
 
     // 正则匹配string 后面的变量名是否合法 变量名的格式为字母开头 只能有字母和数字
-    if (/^[\w\W][\w\W\d\D]+$/ig.test(array[i].value)) {
+    if (/^[\w\W][\w\W\d\D]*$/ig.test(array[i].value)) {
+
 
       // 变量名不能为关键字
       if (keyword.indexOf(array[i].value) !== -1) {
-        throw new SyntaxError('无效的变量名')
+        throw new SyntaxError('无效的变量名 变量名不能使用关键字')
       }
 
-      child.declarations[0].id.name = tokens[current].value
+      child.declarations[0].id.name = array[i].value
     } else {
       throw new SyntaxError('无效的变量名')
     }
 
     // 如果第三个字符为"="号 则接着往下匹配
     if (array[i + 1].value === '=') {
-      i++
+      i+=2
     } else if (array[i + 1].value === ';') {
       // 如果为; 则该声明结束 进行下一条语句
       array.splice(0, i + 1)
@@ -158,7 +162,7 @@ function addVarDeclaration (array) {
 
     child.declarations[0].init = addExpress(value, type)
 
-    array.splice(0, i)
+    array.splice(0, i + 1)  // i表示第几个元素 数组是从0开始，所以需要删除掉的是i + 1个元素
 
   }
 
@@ -174,34 +178,33 @@ function addFunctionDeclaration () {
 }
 
 function parser (tokens) {
+
   let node = []
   let child = {}
-  let current = 0
+  console.log(tokens.length)
+  // let current = 0
   while (tokens.length > 0) {
-    if (tokens[current] === '\n') {
-      current++
-      child = {}
-      continue
-    }
+    // if (tokens[0] === '\n') {
+    //   tokens.splice(0, 1) // 
+    //   child = {}
+    //   continue
+    // }
 
     child = addVarDeclaration(tokens)
-    child && node.push()
+    // console.log(tokens)
+    // console.log(child)
+    // console.log(tokens.length)
+    child && node.push(child)
+
   }
-  // tokens.map(item => {
-  //   if (item === 'string') {
-  //     child = {
-  //       type: 'StringVariableDeclaration',
-  //       declarations: [
-  //         {
-  //           id: {
-  //             type: 'Identifier',
-  //             name: '' // 标识符的名字
-  //           },
-  //           init: {}
-  //         }
-  //       ]
-  //     }
-  //   }
-  // })
-  // if (tokens)
+  return node
 }
+
+var n = parser(t)
+console.log('解析的ast', JSON.stringify(n))
+
+// fs.writeFile("./test.txt", JSON.stringify(n), function(err) {
+//   if(err) {
+//       return console.log(err)
+//   }
+// })
